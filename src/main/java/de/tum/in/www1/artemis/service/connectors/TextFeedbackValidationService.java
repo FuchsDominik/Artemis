@@ -39,7 +39,7 @@ public class TextFeedbackValidationService {
     }
     // Endregion
 
-    @Value("${artemis.automatic-text.segmentation-url}")
+    @Value("${artemis.automatic-text.validation-url}")
     private String API_ENDPOINT;
 
     @Value("${artemis.automatic-text.secret}")
