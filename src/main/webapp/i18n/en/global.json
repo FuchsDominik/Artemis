@@ -9,9 +9,9 @@
         },
         "menu": {
             "home": "Home",
-            "overview": "Overview",
+            "overview": "Course Overview",
             "courses": "Courses",
-            "course": "Course Administration",
+            "course": "Course Management",
             "jhipster-needle-menu-add-element": "JHipster will add additional menu entries here (do not translate!)",
             "entities": {
                 "main": "Entities",
@@ -187,6 +187,8 @@
             "view": "View",
             "preview": "Preview",
             "cleanup": "Cleanup",
+            "remove": "Remove",
+            "purge": "Purge",
             "archive": "Archive",
             "submit": "Submit",
             "submitTooltip": "You can submit multiple times until the exercise deadline. Your last submission will count towards your score.",
@@ -201,6 +203,7 @@
             "re-evaluate": "Re-evaluate",
             "close": "Close",
             "import": "Import",
+            "to-import": "Import",
             "export": "Export",
             "lecture": "Lectures",
             "attachments": "Attachments",
@@ -230,6 +233,9 @@
         },
         "cleanup": {
             "title": "Confirm cleanup operation"
+        },
+        "remove": {
+            "title": "Confirm remove operation"
         },
         "archive": {
             "title": "Confirm archive operation"
@@ -278,5 +284,9 @@
         "lectures": "Lectures",
         "exercise": "Exercise details",
         "statistics": "Course statistics"
+    },
+    "connectionStatus": {
+        "connected": "Connected",
+        "disconnected": "Disconnected"
     }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { JhiAlertService } from 'ng-jhipster';
+import { AlertService } from 'app/core/alert/alert.service';
 import { Router } from '@angular/router';
 import { EMPTY, from } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
@@ -15,22 +15,22 @@ export class LoginService {
         private websocketService: JhiWebsocketService,
         private authServerProvider: AuthServerProvider,
         private router: Router,
-        private alertService: JhiAlertService,
+        private alertService: AlertService,
     ) {}
 
     login(credentials: Credentials, callback?: any) {
-        const cb = callback || function() {};
+        const cb = callback || function () {};
 
         return new Promise((resolve, reject) => {
             this.authServerProvider.login(credentials).subscribe(
-                data => {
-                    this.accountService.identity(true).then(user => {
+                (data) => {
+                    this.accountService.identity(true).then((user) => {
                         this.websocketService.sendActivity();
                         resolve(data);
                     });
                     return cb();
                 },
-                err => {
+                (err) => {
                     this.logout();
                     reject(err);
                     return cb(err);
@@ -39,7 +39,7 @@ export class LoginService {
         });
     }
 
-    loginWithToken(jwt: string, rememberMe: string) {
+    loginWithToken(jwt: string, rememberMe: boolean) {
         return this.authServerProvider.loginWithToken(jwt, rememberMe);
     }
 

@@ -26,8 +26,9 @@ import de.tum.in.www1.artemis.util.DatabaseUtilService;
 import de.tum.in.www1.artemis.util.ModelFactory;
 import de.tum.in.www1.artemis.util.RequestUtilService;
 import de.tum.in.www1.artemis.util.TextExerciseUtilService;
+import de.tum.in.www1.artemis.web.rest.dto.TextAssessmentDTO;
 
-public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest {
+public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationBambooBitbucketJiraTest {
 
     @Autowired
     CourseRepository courseRepo;
@@ -85,21 +86,6 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
 
     @Test
     @WithMockUser(value = "tutor1", roles = "TA")
-    public void getParticipationForTextExerciseWithoutAssessment_studentHidden() throws Exception {
-        TextSubmission textSubmission = ModelFactory.generateTextSubmission("example text", Language.ENGLISH, true);
-        textSubmission = database.addTextSubmission(textExercise, textSubmission, "student1");
-
-        StudentParticipation participationWithoutAssessment = request.get("/api/exercise/" + textExercise.getId() + "/participation-without-assessment", HttpStatus.OK,
-                StudentParticipation.class);
-
-        assertThat(participationWithoutAssessment).as("participation without assessment was found").isNotNull();
-        assertThat(participationWithoutAssessment.getSubmissions().iterator().next().getId()).as("participation with correct text submission was found")
-                .isEqualTo(textSubmission.getId());
-        assertThat(participationWithoutAssessment.getStudent()).as("student of participation is hidden").isNull();
-    }
-
-    @Test
-    @WithMockUser(value = "tutor1", roles = "TA")
     public void retrieveParticipationForSubmission_studentHidden() throws Exception {
         TextSubmission textSubmission = ModelFactory.generateTextSubmission("Some text", Language.ENGLISH, false);
         textSubmission = database.addTextSubmission(textExercise, textSubmission, "student1");
@@ -109,7 +95,7 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
         assertThat(participationWithoutAssessment).as("participation with submission was found").isNotNull();
         assertThat(participationWithoutAssessment.getSubmissions().iterator().next().getId()).as("participation with correct text submission was found")
                 .isEqualTo(textSubmission.getId());
-        assertThat(participationWithoutAssessment.getStudent()).as("student of participation is hidden").isNull();
+        assertThat(participationWithoutAssessment.getStudent()).as("student of participation is hidden").isEmpty();
     }
 
     @Test
@@ -149,7 +135,7 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
                 Result.class, HttpStatus.OK);
 
         assertThat(updatedResult).as("updated result found").isNotNull();
-        assertThat(((StudentParticipation) updatedResult.getParticipation()).getStudent()).as("student of participation is hidden").isNull();
+        assertThat(((StudentParticipation) updatedResult.getParticipation()).getStudent()).as("student of participation is hidden").isEmpty();
     }
 
     @Test
@@ -157,16 +143,22 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
     public void saveTextAssessment_studentHidden() throws Exception {
         TextSubmission textSubmission = ModelFactory.generateTextSubmission("Some text", Language.ENGLISH, true);
         database.addTextSubmission(textExercise, textSubmission, "student1");
+        exerciseDueDatePassed();
 
-        Participation participationWithoutAssessment = request.get("/api/exercise/" + textExercise.getId() + "/participation-without-assessment", HttpStatus.OK,
-                Participation.class);
+        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("lock", "true");
 
-        Result result = request.putWithResponseBody(
-                "/api/text-assessments/exercise/" + textExercise.getId() + "/result/" + participationWithoutAssessment.getResults().iterator().next().getId(),
-                new ArrayList<String>(), Result.class, HttpStatus.OK);
+        TextSubmission submissionWithoutAssessment = request.get("/api/exercises/" + textExercise.getId() + "/text-submission-without-assessment", HttpStatus.OK,
+                TextSubmission.class, params);
+
+        final TextAssessmentDTO textAssessmentDTO = new TextAssessmentDTO();
+        textAssessmentDTO.setFeedbacks(new ArrayList<>());
+
+        Result result = request.putWithResponseBody("/api/text-assessments/exercise/" + textExercise.getId() + "/result/" + submissionWithoutAssessment.getResult().getId(),
+                textAssessmentDTO, Result.class, HttpStatus.OK);
 
         assertThat(result).as("saved result found").isNotNull();
-        assertThat(((StudentParticipation) result.getParticipation()).getStudent()).as("student of participation is hidden").isNull();
+        assertThat(((StudentParticipation) result.getParticipation()).getStudent()).as("student of participation is hidden").isEmpty();
     }
 
     @Test
@@ -174,16 +166,22 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
     public void submitTextAssessment_studentHidden() throws Exception {
         TextSubmission textSubmission = ModelFactory.generateTextSubmission("Some text", Language.ENGLISH, true);
         database.addTextSubmission(textExercise, textSubmission, "student1");
+        exerciseDueDatePassed();
 
-        Participation participationWithoutAssessment = request.get("/api/exercise/" + textExercise.getId() + "/participation-without-assessment", HttpStatus.OK,
-                Participation.class);
+        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("lock", "true");
 
+        TextSubmission submissionWithoutAssessment = request.get("/api/exercises/" + textExercise.getId() + "/text-submission-without-assessment", HttpStatus.OK,
+                TextSubmission.class, params);
+
+        final TextAssessmentDTO textAssessmentDTO = new TextAssessmentDTO();
+        textAssessmentDTO.setFeedbacks(new ArrayList<>());
         Result result = request.putWithResponseBody(
-                "/api/text-assessments/exercise/" + textExercise.getId() + "/result/" + participationWithoutAssessment.getResults().iterator().next().getId() + "/submit",
-                new ArrayList<String>(), Result.class, HttpStatus.OK);
+                "/api/text-assessments/exercise/" + textExercise.getId() + "/result/" + submissionWithoutAssessment.getResult().getId() + "/submit", textAssessmentDTO,
+                Result.class, HttpStatus.OK);
 
         assertThat(result).as("saved result found").isNotNull();
-        assertThat(((StudentParticipation) result.getParticipation()).getStudent()).as("student of participation is hidden").isNull();
+        assertThat(((StudentParticipation) result.getParticipation()).getStudent()).as("student of participation is hidden").isEmpty();
     }
 
     @Test
@@ -204,17 +202,19 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
         // connect it with the user
         User user = database.getUserByLogin("tutor1");
         studentParticipation.setInitializationDate(ZonedDateTime.now());
-        studentParticipation.setStudent(user);
+        studentParticipation.setParticipant(user);
         studentParticipationRepository.save(studentParticipation);
 
-        Participation participationWithoutAssessment = request.get("/api/exercise/" + textExercise.getId() + "/participation-without-assessment", HttpStatus.OK,
-                Participation.class);
+        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("lock", "true");
 
-        Result result = request.get("/api/text-assessments/result/" + participationWithoutAssessment.getResults().iterator().next().getId() + "/with-textblocks", HttpStatus.OK,
-                Result.class);
+        TextSubmission submissionWithoutAssessment = request.get("/api/exercises/" + textExercise.getId() + "/text-submission-without-assessment", HttpStatus.OK,
+                TextSubmission.class, params);
+
+        Result result = request.get("/api/text-assessments/result/" + submissionWithoutAssessment.getResult().getId() + "/with-textblocks", HttpStatus.OK, Result.class);
 
         assertThat(result).as("saved result found").isNotNull();
-        assertThat(((StudentParticipation) result.getParticipation()).getStudent()).as("student of participation is hidden").isNull();
+        assertThat(((StudentParticipation) result.getParticipation()).getStudent()).as("student of participation is hidden").isEmpty();
     }
 
     @Test
@@ -227,7 +227,7 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
         FileUploadSubmission fileUploadSubmission = ModelFactory.generateFileUploadSubmission(true);
         database.addFileUploadSubmissionWithResultAndAssessorFeedback(fileUploadExercise, fileUploadSubmission, "student1", "tutor1", new ArrayList<Feedback>());
 
-        request.get("/api/exercise/" + fileUploadExercise.getId() + "/participation-without-assessment", HttpStatus.BAD_REQUEST, Participation.class);
+        request.get("/api/exercises/" + fileUploadExercise.getId() + "/text-submission-without-assessment", HttpStatus.BAD_REQUEST, Participation.class);
 
         Result result = request.get("/api/text-assessments/result/" + fileUploadSubmission.getParticipation().getResults().iterator().next().getId() + "/with-textblocks",
                 HttpStatus.BAD_REQUEST, Result.class);
@@ -249,6 +249,22 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
     }
 
     @Test
+    @WithMockUser(value = "student1", roles = "USER")
+    public void getDataForTextEditor_hasTextBlocks() throws Exception {
+        TextSubmission textSubmission = ModelFactory.generateTextSubmission("Some text", Language.ENGLISH, true);
+        ArrayList<TextBlock> textBlocks = textExerciseUtilService.generateTextBlocks(1);
+        textBlocks.forEach(TextBlock::computeId);
+        textSubmission = database.addTextSubmissionWithResultAndAssessor(textExercise, textSubmission, "student1", "tutor1");
+        database.addTextBlocksToTextSubmission(textBlocks, textSubmission);
+
+        Participation participation = request.get("/api/text-editor/" + textSubmission.getParticipation().getId(), HttpStatus.OK, Participation.class);
+
+        final TextSubmission submission = (TextSubmission) participation.getResults().iterator().next().getSubmission();
+        assertThat(submission.getBlocks()).isNotNull();
+        assertThat(submission.getBlocks()).isNotEmpty();
+    }
+
+    @Test
     @WithMockUser(value = "student2", roles = "USER")
     public void getDataForTextEditor_asOtherStudent() throws Exception {
         TextSubmission textSubmission = ModelFactory.generateTextSubmission("Some text", Language.ENGLISH, true);
@@ -266,7 +282,7 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
 
         assertThat(participation).as("participation found").isNotNull();
         assertThat(participation.getResults().iterator().next()).as("result found").isNotNull();
-        assertThat(participation.getStudent()).as("student of participation is hidden").isNull();
+        assertThat(participation.getStudent()).as("student of participation is hidden").isEmpty();
     }
 
     @Test
@@ -338,6 +354,12 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
     @WithMockUser(value = "instructor1", roles = "INSTRUCTOR")
     public void cancelAssessmentOfOtherTutorAsInstructor() throws Exception {
         cancelAssessment(HttpStatus.OK);
+    }
+
+    @Test
+    @WithMockUser(value = "tutor1", roles = "TA")
+    public void cancelAssessment_wrongSubmissionId() throws Exception {
+        request.put("/api/text-assessments/exercise/" + textExercise.getId() + "/submission/100/cancel-assessment", null, HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -434,6 +456,10 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
         overrideAssessment("student1", "tutor1", HttpStatus.OK, "true", false);
     }
 
+    private void exerciseDueDatePassed() {
+        database.updateExerciseDueDate(textExercise.getId(), ZonedDateTime.now().minusHours(2));
+    }
+
     private void assessmentDueDatePassed() {
         database.updateAssessmentDueDate(textExercise.getId(), ZonedDateTime.now().minusSeconds(10));
     }
@@ -450,6 +476,7 @@ public class TextAssessmentIntegrationTest extends AbstractSpringIntegrationTest
         if (submit.equals("true")) {
             path = path + "/submit";
         }
-        request.putWithResponseBodyAndParams(path, feedbacks, Result.class, httpStatus, params);
+        var body = new TextAssessmentDTO(feedbacks);
+        request.putWithResponseBodyAndParams(path, body, Result.class, httpStatus, params);
     }
 }
