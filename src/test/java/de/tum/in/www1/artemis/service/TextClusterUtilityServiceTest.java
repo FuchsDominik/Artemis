@@ -55,7 +55,7 @@ public class TextClusterUtilityServiceTest extends AbstractSpringIntegrationTest
 
     @BeforeEach
     public void init() {
-        textBlocks = textExerciseUtilService.createTextBlocks(10);
+        textBlocks = textExerciseUtilService.generateTextBlocks(10);
         TextExercise textExercise = new TextExercise();
         textExerciseRepository.save(textExercise);
         StudentParticipation participation = new StudentParticipation();

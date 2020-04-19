@@ -14,7 +14,6 @@ import de.tum.in.www1.artemis.domain.enumeration.AssessmentType;
 import de.tum.in.www1.artemis.domain.enumeration.Language;
 import de.tum.in.www1.artemis.domain.participation.StudentParticipation;
 import de.tum.in.www1.artemis.repository.StudentParticipationRepository;
-import de.tum.in.www1.artemis.repository.TextClusterRepository;
 import de.tum.in.www1.artemis.repository.TextExerciseRepository;
 import de.tum.in.www1.artemis.repository.TextSubmissionRepository;
 
@@ -29,9 +28,6 @@ public class TextExerciseUtilService {
 
     @Autowired
     private TextExerciseRepository textExerciseRepository;
-
-    @Autowired
-    private TextClusterRepository textClusterRepository;
 
     private Random random = new Random();
 
@@ -101,29 +97,6 @@ public class TextExerciseUtilService {
             textSubmissionRepository.save(submission);
         }
         return textExercise;
-    }
-
-    /**
-     * Creates a Submission to a text exercise with text blocks
-     * @param course Course of the submission
-     * @param textBlocks Text blocks of the submission
-     * @param textExercise Text exercise the submission is referring to
-     * @return Submission
-     */
-    public Submission createSubmissionWithTextBlocks(Course course, List<TextBlock> textBlocks, TextExercise textExercise) {
-        StudentParticipation studentParticipation = new StudentParticipation();
-        studentParticipation.setExercise(textExercise);
-        studentParticipation = participationRepository.save(studentParticipation);
-
-        TextSubmission submission = new TextSubmission();
-        submission.setParticipation(studentParticipation);
-        submission.setLanguage(Language.ENGLISH);
-        submission.setText("Text");
-        submission.setBlocks(textBlocks);
-        submission.setSubmitted(true);
-        submission.setSubmissionDate(ZonedDateTime.now());
-        studentParticipation.addSubmissions(submission);
-        return submission;
     }
 
     /**

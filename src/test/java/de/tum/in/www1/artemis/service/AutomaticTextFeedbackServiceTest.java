@@ -69,7 +69,7 @@ public class AutomaticTextFeedbackServiceTest extends AbstractSpringIntegrationT
 
     @BeforeEach
     public void setUp() throws NetworkingError {
-        textBlocks = textExerciseUtilService.createTextBlocks(10);
+        textBlocks = textExerciseUtilService.generateTextBlocks(10);
 
         textExercise = new TextExercise();
         textExerciseRepository.save(textExercise);
@@ -149,7 +149,7 @@ public class AutomaticTextFeedbackServiceTest extends AbstractSpringIntegrationT
     @Test
     public void createScoreWithManualDistanceMatrix() {
         List<Feedback> feedbacks = new ArrayList<>();
-        List<TextBlock> textBlocks = textExerciseUtilService.createTextBlocks(4);
+        List<TextBlock> textBlocks = textExerciseUtilService.generateTextBlocks(4);
         textCluster = textExerciseUtilService.createTextCluster(textBlocks, textExercise);
         double[][] distanceMatrix = { { 0, 0.1, 0.9, 0.9 }, { 0.1, 0, 0.5, 0.5 }, { 0.9, 0.5, 0, 0.1 }, { 0.9, 0.5, 0.1, 0 } };
         textCluster.setDistanceMatrix(distanceMatrix);
@@ -187,7 +187,7 @@ public class AutomaticTextFeedbackServiceTest extends AbstractSpringIntegrationT
     public void createCommentTest() {
         List<Feedback> feedbacks = new ArrayList<>();
         String givenComment = "The quick brown fox jumps over the lazy dog";
-        List<TextBlock> textBlocks = textExerciseUtilService.createTextBlocks(4);
+        List<TextBlock> textBlocks = textExerciseUtilService.generateTextBlocks(4);
         textCluster = textExerciseUtilService.createTextCluster(textBlocks, textExercise);
         double[][] distanceMatrix = { { 0, 0.1, 0.9, 0.9 }, { 0.1, 0, 0.5, 0.5 }, { 0.9, 0.5, 0, 0.1 }, { 0.9, 0.5, 0.1, 0 } };
         textCluster.setDistanceMatrix(distanceMatrix);
