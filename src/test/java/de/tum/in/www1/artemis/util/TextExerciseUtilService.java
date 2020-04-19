@@ -35,7 +35,7 @@ public class TextExerciseUtilService {
 
     private Random random = new Random();
 
-    public ArrayList<TextBlock> createTextBlocks(int count) {
+    public ArrayList<TextBlock> generateTextBlocks(int count) {
         ArrayList<TextBlock> textBlocks = new ArrayList<>();
         TextBlock textBlock;
         for (int i = 0; i < count; i++) {
