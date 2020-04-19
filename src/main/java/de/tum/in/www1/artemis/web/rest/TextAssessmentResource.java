@@ -287,7 +287,6 @@ public class TextAssessmentResource extends AssessmentResource {
                 throw new BadRequestAlertException("This submission is being assessed by another tutor", ENTITY_NAME, "alreadyAssessed");
             }
 
-
             // Load Feedback already created for this assessment
             final List<Feedback> assessments = textAssessmentService.getAssessmentsForResult(result);
             result.setFeedbacks(assessments);
